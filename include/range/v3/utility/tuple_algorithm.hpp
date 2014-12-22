@@ -34,14 +34,24 @@ namespace ranges
         struct tuple_transform_fn
         {
         private:
+            template<typename Tup, typename Fun, std::size_t I>
+            struct unary_transform_result
+            {
+                using type = result_of_t<Fun(decltype(std::get<I>(std::declval<Tup>())))>;
+            };
+            template<typename Tup0, typename Tup1, typename Fun, std::size_t I>
+            struct binary_transform_result
+            {
+                using type = result_of_t<Fun(
+                    decltype(std::get<I>(std::declval<Tup0>())),
+                    decltype(std::get<I>(std::declval<Tup1>())))>;
+            };
             template<typename Tup, typename Fun, std::size_t...Is>
             using unary_result_t = std::tuple<
-                result_of_t<Fun(decltype(std::get<Is>(std::declval<Tup>())))>...>;
+                typename unary_transform_result<Tup, Fun, Is>::type...>;
             template<typename Tup0, typename Tup1, typename Fun, std::size_t...Is>
             using binary_result_t = std::tuple<
-                result_of_t<Fun(
-                    decltype(std::get<Is>(std::declval<Tup0>())),
-                    decltype(std::get<Is>(std::declval<Tup1>())))>...>;
+                typename binary_transform_result<Tup0, Tup1, Fun, Is>::type...>;
 
             template<typename Tup, typename Fun, std::size_t...Is>
             static unary_result_t<Tup, Fun, Is...>

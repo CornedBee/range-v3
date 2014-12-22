@@ -36,14 +36,18 @@ namespace ranges
         namespace detail
         {
             template<typename T, typename U>
+            std::true_type has_common(T*, U*, decltype(true? std::declval<T>() : std::declval<U>())* = 0);
+            std::false_type has_common(...);
+
+            template<typename T, typename U>
             using default_common_t = decltype(true? std::declval<T>() : std::declval<U>());
 
-            template<typename T, typename U, typename Enable = void>
+            template<typename T, typename U, typename HasCommon = decltype(has_common((T*)0, (U*)0))>
             struct common_type_if
             {};
 
             template<typename T, typename U>
-            struct common_type_if<T, U, void_t<default_common_t<T, U>>>
+            struct common_type_if<T, U, std::true_type>
             {
                 using type = decay_t<default_common_t<T, U>>;
             };

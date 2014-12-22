@@ -72,21 +72,28 @@ namespace ranges
             };
 
             // Now implementations
-            template<typename T, typename U, typename Enable = void>
+            template <typename T, typename U>
+            std::true_type is_swappable_helper(T* t, U* u, decltype(swap(*t, *u))* = 0);
+            std::false_type is_swappable_helper(...);
+
+            template<typename T, typename U>
             struct is_swappable_
+              : decltype(is_swappable_helper((T*)0, (U*)0))
+            {};
+
+            template<typename T, typename U, bool Swappable>
+            struct is_nothrow_swappable_helper
               : std::false_type
             {};
 
             template<typename T, typename U>
-            struct is_swappable_<T, U, typename std::enable_if<
-                std::is_void<decltype(swap(std::declval<T>(), std::declval<U>()))>::value &&
-                std::is_void<decltype(swap(std::declval<U>(), std::declval<T>()))>::value>::type>
-              : std::true_type
+            struct is_nothrow_swappable_helper<T, U, true>
+              //: meta::bool_<noexcept(swap(std::declval<T>(), std::declval<U>()))>
             {};
 
             template<typename T, typename U>
             struct is_nothrow_swappable_
-              : meta::bool_<noexcept(swap(std::declval<T>(), std::declval<U>()))>
+              : is_nothrow_swappable_helper<T, U, is_swappable_<T, U>::value>
             {};
 
             template<typename First0, typename Second0, typename First1, typename Second1>
@@ -133,14 +140,23 @@ namespace ranges
             //    std::reference_wrapper<T>. How do I make it model IndirectlySwappable?
             // A: With an overload of indirect_swap.
 
+            template <typename Readable0, typename Readable1>
+            struct is_dereferenced_swappable
+              : is_swappable_<decltype(*std::declval<Readable0>()),
+                              decltype(*std::declval<Readable1>())>
+            {};
+
+            template <typename Readable0, typename Readable1>
+            struct is_dereferenced_nothrow_swappable
+              : is_nothrow_swappable<decltype(*std::declval<Readable0>()),
+                                     decltype(*std::declval<Readable1>())>
+            {};
+
             // Forward-declarations first!
             template<typename Readable0, typename Readable1>
-            typename std::enable_if<
-                is_swappable<decltype(*std::declval<Readable0>()),
-                             decltype(*std::declval<Readable1>())>::value>::type
+            typename std::enable_if<is_dereferenced_swappable<Readable0, Readable1>::value>::type
             indirect_swap(Readable0 a, Readable1 b)
-                noexcept(is_nothrow_swappable<decltype(*std::declval<Readable0>()),
-                                              decltype(*std::declval<Readable1>())>::value);
+                noexcept(is_dereferenced_nothrow_swappable<Readable0, Readable1>::value);
 
             struct indirect_swap_fn
             {

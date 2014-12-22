@@ -119,6 +119,12 @@ namespace ranges
                         base_concepts_of_t<Concept>,
                         meta::bind_back<meta::quote<concepts::models>, Ts...>>>;
 
+            template<typename Concept, typename...Ts>
+            struct models_result
+            {
+                using type = decltype(models_<Ts...>(_nullptr_v<Concept>()));
+            };
+
             template<typename List>
             struct most_refined_
             {};
@@ -193,7 +199,7 @@ namespace ranges
             // models
             template<typename Concept, typename...Ts>
             struct models
-              : meta::bool_<decltype(detail::models_<Ts...>(_nullptr_v<Concept>()))::value>
+              : meta::bool_<detail::models_result<Concept, Ts...>::type::value>
             {};
 
             template<typename Concept, typename...Args, typename...Ts>

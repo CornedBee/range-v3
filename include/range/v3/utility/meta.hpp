@@ -38,9 +38,18 @@ namespace ranges
             template<typename T>
             using eval = typename T::type;
 
+            namespace meta_detail
+            {
+                template<typename F, typename...Args>
+                struct apply_impl
+                {
+                    using type = typename F::template apply<Args...>;
+                };
+            }
+
             /// \brief Evaluate the Metafunction Class `F` with the arguments \c Args.
             template<typename F, typename...Args>
-            using apply = typename F::template apply<Args...>;
+            using apply = typename meta_detail::apply_impl<F, Args...>;
 
             /// \brief A metafunction that evaluates the Metafunction Class `F` with
             /// the arguments \c Args.
@@ -305,6 +314,18 @@ namespace ranges
                 struct _or_<Bool, Bools...>
                   : if_c<Bool::type::value, std::true_type, _or_<Bools...>>
                 {};
+
+                template<bool ...Bools>
+                struct and_c_impl
+                {
+                    using type = decltype(meta_detail::fast_and_impl_(if_c<Bools, int*, int>{}...));
+                };
+
+                template<typename...Bools>
+                struct fast_and_helper
+                {
+                    using type = and_c_impl<Bools::type::value...>;
+                };
             }
             /// \endcond
 
@@ -313,8 +334,7 @@ namespace ranges
 
             /// \brief Logically and together all the Boolean parameters
             template<bool ...Bools>
-            using and_c =
-                decltype(meta_detail::fast_and_impl_(if_c<Bools, int*, int>{}...));
+            using and_c = meta_detail::and_c_impl<Bools...>;
 
             /// \brief Logically or together all the Boolean parameters
             template<bool ...Bools>
@@ -328,7 +348,7 @@ namespace ranges
             /// \brief Logically and together all the integral constant-wrapped Boolean
             /// parameters, <i>without</i> doing short-circuiting.
             template<typename...Bools>
-            using fast_and = and_c<Bools::type::value...>;
+            using fast_and = typename meta_detail::fast_and_helper<Bools...>::type;
 
             /// \brief Logically or together all the integral constant-wrapped Boolean
             /// parameters, <i>without</i> doing short-circuiting.
