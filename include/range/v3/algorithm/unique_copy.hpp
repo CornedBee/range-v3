@@ -28,7 +28,7 @@ namespace ranges
     {
         /// \ingroup group-concepts
         template<typename I, typename O, typename C = equal_to, typename P = ident,
-            typename V = iterator_value_t<I>,
+            typename V = iterator_common_reference_t<I>,
             typename X = concepts::Invokable::result_t<P, V>>
         using UniqueCopyable = meta::fast_and<
             InputIterator<I>,
@@ -45,6 +45,7 @@ namespace ranges
             static std::pair<I, O> impl(I begin, S end, O out, C pred_, P proj_,
                 concepts::InputIterator*, std::false_type)
             {
+                // TODO this will be very interesting once we support proxy iterators.
                 auto &&pred = invokable(pred_);
                 auto &&proj = invokable(proj_);
                 if(begin != end)

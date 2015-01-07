@@ -46,6 +46,33 @@ namespace ranges
 {
     inline namespace v3
     {
+        namespace meta
+        {
+            template<typename...Ts>
+            struct list;
+
+            template<typename T>
+            struct id;
+
+            template<template<typename...> class>
+            struct quote;
+
+            template<template<typename...> class C>
+            struct quote_trait;
+
+            template<typename T, template<T...> class F>
+            struct quote_i;
+
+            template<typename T, template<T...> class C>
+            struct quote_trait_i;
+
+            template<typename...Fs>
+            struct compose;
+
+            template<typename T>
+            struct always;
+        }
+
         /// \cond
         namespace adl_begin_end_detail
         {
@@ -81,6 +108,12 @@ namespace ranges
 
         template<typename ...Ts>
         using common_type_t = typename common_type<Ts...>::type;
+
+        template<typename ...Ts>
+        struct common_reference;
+
+        template<typename ...Ts>
+        using common_reference_t = typename common_reference<Ts...>::type;
 
         template<typename Sig>
         using result_of_t = typename std::result_of<Sig>::type;
@@ -198,8 +231,6 @@ namespace ranges
             template<typename...Rest>
             using void_t = typename always_void<Rest...>::type;
 
-            struct not_equal_to;
-
             template<typename T>
             using decay_t = typename std::decay<T>::type;
 
@@ -249,6 +280,27 @@ namespace ranges
               : std::is_trivial<T>
             {};
 #endif
+
+            template<typename T>
+            struct remove_rvalue_reference
+            {
+                using type = T;
+            };
+
+            template<typename T>
+            struct remove_rvalue_reference<T &&>
+            {
+                using type = T;
+            };
+
+            template<typename T>
+            using remove_rvalue_reference_t = typename remove_rvalue_reference<T>::type;
+
+            struct make_tuple_like_fn;
+            struct copy_tuple_like_fn;
+            struct move_tuple_like_fn;
+            template<typename Ref, typename Val>
+            struct common_tuple_ref;
         }
         /// \endcond
 
@@ -264,6 +316,11 @@ namespace ranges
 
         struct begin_tag {};
         struct end_tag {};
+
+        struct equal_to;
+        struct less;
+        struct ordered_less;
+        struct ident;
 
         template<typename Rng, typename Void = void>
         struct is_infinite;
@@ -362,11 +419,11 @@ namespace ranges
         // Views
         //
         template<typename Rng, typename BinaryPredicate>
-        struct adjacent_filter_view;
+        struct adjacent_remove_if_view;
 
         namespace view
         {
-            struct adjacent_filter_fn;
+            struct adjacent_remove_if_fn;
         }
 
         namespace view
@@ -573,7 +630,7 @@ namespace ranges
         }
 
         template<typename Rng>
-        using unique_view = adjacent_filter_view<Rng, detail::not_equal_to>;
+        using unique_view = adjacent_remove_if_view<Rng, equal_to>;
 
         namespace view
         {
@@ -593,11 +650,22 @@ namespace ranges
             struct values_fn;
         }
 
-        template<typename Fun, typename...Rngs>
+        template<
+            typename Fun,
+            typename Rngs,
+            typename CopyFun = ident,
+            typename MoveFun = ident,
+            typename CommonRef = meta::quote<common_reference_t>>
         struct zip_with_view;
 
-        template<typename...Rngs>
-        struct zip_view;
+        template<typename Rngs>
+        using zip_view =
+            zip_with_view<
+                detail::make_tuple_like_fn,
+                Rngs,
+                detail::copy_tuple_like_fn,
+                detail::move_tuple_like_fn,
+                meta::quote_trait<detail::common_tuple_ref>>;
 
         namespace view
         {

@@ -75,7 +75,7 @@ namespace ranges
                 }
             };
 
-            template<typename I, typename Ref>
+            template<typename I, typename Ref, typename CommonRef>
             struct operator_brackets_const_proxy
             {
                 using type = struct proxy
@@ -98,6 +98,11 @@ namespace ranges
                     {
                         return *it_;
                     }
+                    operator CommonRef() const volatile
+                    {
+                        return *it_;
+                    }
+                    CONCEPT_REQUIRES(Convertible<Ref, value_t>())
                     operator value_t() const
                     {
                         return *it_;
@@ -109,7 +114,7 @@ namespace ranges
                 }
             };
 
-            template<typename I, typename Ref>
+            template<typename I, typename Ref, typename CommonRef>
             struct operator_brackets_proxy
             {
                 using type = struct proxy
@@ -131,11 +136,17 @@ namespace ranges
                     {
                         return *it_;
                     }
+                    operator CommonRef() const volatile
+                    {
+                        return *it_;
+                    }
+                    CONCEPT_REQUIRES(Convertible<Ref, value_t>())
                     operator value_t() const
                     {
                         return *it_;
                     }
                     proxy const & operator=(proxy&) const = delete;
+                    // BUGBUG assign from common reference? from rvalue reference?
                     proxy const & operator=(iterator_value_t<I> const & x) const
                     {
                         *it_ = x;
@@ -153,15 +164,15 @@ namespace ranges
                 }
             };
 
-            template<typename I, typename Val, typename Ref>
+            template<typename I, typename Val, typename Ref, typename CommonRef>
             using operator_brackets_dispatch =
                 meta::if_<
                     iterator_writability_disabled<Val, Ref>,
                     meta::if_<
                         std::is_pod<Val>,
                         operator_brackets_value<meta::eval<std::remove_const<Val>>>,
-                        operator_brackets_const_proxy<I, Ref>>,
-                    operator_brackets_proxy<I, Ref>>;
+                        operator_brackets_const_proxy<I, Ref, CommonRef>>,
+                    operator_brackets_proxy<I, Ref, CommonRef>>;
 
             // iterators whose dereference operators reference the same value
             // for all iterators into the same sequence (like many input
@@ -211,31 +222,44 @@ namespace ranges
                 // value_type(*r++) can work.  In this case, *r is the same as
                 // *r++, and the conversion operator below is used to ensure
                 // readability.
-                writable_postfix_increment_proxy const& operator*() const
+                writable_postfix_increment_proxy const & operator*() const
                 {
                     return *this;
                 }
+                // So that iter_move(r++) moves the cached value out
+                friend value_type && indirect_move(
+                    writable_postfix_increment_proxy const &,
+                    writable_postfix_increment_proxy const &ref)
+                {
+                    return std::move(ref.value_);
+                }
                 // Provides readability of *r++
-                operator value_type&() const
+                operator value_type &() const
                 {
                     return value_;
                 }
                 // Provides writability of *r++
-                template<typename T, enable_if_t<!std::is_same<T, writable_postfix_increment_proxy>::value> = 0>
-                T const& operator=(T const& x) const
+                template<typename T,
+                    CONCEPT_REQUIRES_(Writable<I, T>())>
+                void operator=(T const &x) const
                 {
                     *it_ = x;
-                    return x;
                 }
                 // This overload just in case only non-const objects are writable
-                template<typename T, enable_if_t<!std::is_same<T, writable_postfix_increment_proxy>::value> = 0>
-                T& operator=(T& x) const
+                template<typename T,
+                    CONCEPT_REQUIRES_(Writable<I, T>())>
+                void operator=(T &x) const
                 {
                     *it_ = x;
-                    return x;
+                }
+                template<typename T,
+                    CONCEPT_REQUIRES_(MoveWritable<I, T>())>
+                void operator=(T &&x) const
+                {
+                    *it_ = std::move(x);
                 }
                 // Provides X(r++)
-                operator I const&() const
+                operator I const &() const
                 {
                     return it_;
                 }
@@ -361,12 +385,12 @@ namespace ranges
             basic_mixin(T t)
               : t_(std::move(t))
             {}
-            T &get()
+            T &get() noexcept
             {
                 return t_;
             }
             /// \overload
-            T const &get() const
+            T const &get() const noexcept
             {
                 return t_;
             }
@@ -423,11 +447,11 @@ namespace ranges
                     detail::cursor_concept_t<Cur>>;
 
             using detail::mixin_base<Cur>::get;
-            Cur &pos()
+            Cur &pos() noexcept
             {
                 return this->detail::mixin_base<Cur>::get();
             }
-            Cur const &pos() const
+            Cur const &pos() const noexcept
             {
                 return this->detail::mixin_base<Cur>::get();
             }
@@ -461,6 +485,7 @@ namespace ranges
             using reference =
                 decltype(range_access::current(std::declval<Cur const &>()));
             using value_type = range_access::cursor_value_t<Cur>;
+            using common_reference = range_access::cursor_common_reference_t<Cur>;
             using iterator_category = decltype(detail::iter_cat(_nullptr_v<cursor_concept_t>()));
             using difference_type = range_access::cursor_difference_t<Cur>;
             using pointer = meta::eval<detail::operator_arrow_dispatch<reference>>;
@@ -469,7 +494,7 @@ namespace ranges
                 detail::postfix_increment_result<
                     basic_iterator, value_type, reference, iterator_category>;
             using operator_brackets_dispatch_t =
-                detail::operator_brackets_dispatch<basic_iterator, value_type, reference>;
+                detail::operator_brackets_dispatch<basic_iterator, value_type, reference, common_reference>;
         public:
             constexpr basic_iterator() = default;
             basic_iterator(Cur pos)
@@ -478,6 +503,7 @@ namespace ranges
             // Mix in any additional constructors defined and exported by the cursor
             using detail::mixin_base<Cur>::mixin_base;
             reference operator*() const
+                noexcept(noexcept(range_access::current(std::declval<basic_iterator const &>().pos())))
             {
                 return range_access::current(pos());
             }

@@ -28,13 +28,13 @@ namespace ranges
     {
         /// \ingroup group-concepts
         template<typename I, typename O, typename T, typename P = ident,
-            typename V = iterator_value_t<I>,
+            typename V = iterator_common_reference_t<I>,
             typename X = concepts::Invokable::result_t<P, V>>
         using RemoveCopyable = meta::fast_and<
             InputIterator<I>,
             WeaklyIncrementable<O>,
             EqualityComparable<X, T>,
-            IndirectlyProjectedCopyable<I, P, O>>;
+            IndirectlyCopyable<I, O, P>>;
 
         /// \addtogroup group-algorithms
         /// @{
@@ -47,11 +47,11 @@ namespace ranges
                 auto &&proj = invokable(proj_);
                 for(; begin != end; ++begin)
                 {
-                    // BUGBUG if proj does a move, this nukes all source elements.
-                    auto &&v = save(proj(*begin));
+                    auto &&x = *begin;
+                    auto &&v = proj((decltype(x) &&) x);
                     if(!(v == val))
                     {
-                        *out = (decltype(v)) v;
+                        *out = (decltype(v) &&) v;
                         ++out;
                     }
                 }

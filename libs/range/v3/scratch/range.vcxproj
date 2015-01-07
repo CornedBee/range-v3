@@ -185,10 +185,11 @@
     <ClCompile Include="..\..\..\..\test\utility\concepts.cpp" />
     <ClCompile Include="..\..\..\..\test\utility\meta.cpp" />
     <ClCompile Include="..\..\..\..\test\utility\swap.cpp" />
-    <ClCompile Include="..\..\..\..\test\view\adjacent_filter.cpp" />
+    <ClCompile Include="..\..\..\..\test\view\adjacent_remove_if.cpp" />
     <ClCompile Include="..\..\..\..\test\view\all.cpp" />
     <ClCompile Include="..\..\..\..\test\view\any_range.cpp" />
     <ClCompile Include="..\..\..\..\test\view\bounded.cpp" />
+    <ClCompile Include="..\..\..\..\test\view\concat.cpp" />
     <ClCompile Include="..\..\..\..\test\view\const.cpp" />
     <ClCompile Include="..\..\..\..\test\view\counted.cpp" />
     <ClCompile Include="..\..\..\..\test\view\delimit.cpp" />
@@ -276,6 +277,7 @@
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\lower_bound.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\max_element.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\merge.hpp" />
+    <ClInclude Include="..\..\..\..\include\range\v3\algorithm\merge_move.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\minmax_element.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\min_element.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\mismatch.hpp" />
@@ -287,6 +289,7 @@
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\partial_sort_copy.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\partition.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\partition_copy.hpp" />
+    <ClInclude Include="..\..\..\..\include\range\v3\algorithm\partition_move.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\partition_point.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\permutation.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\algorithm\random_shuffle.hpp" />
@@ -343,6 +346,7 @@
     <ClInclude Include="..\..\..\..\include\range\v3\range_traits.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\size.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\to_container.hpp" />
+    <ClInclude Include="..\..\..\..\include\range\v3\utility\associated_types.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\utility\basic_iterator.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\utility\box.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\utility\common_iterator.hpp" />
@@ -373,7 +377,7 @@
     <ClInclude Include="..\..\..\..\include\range\v3\utility\unreachable.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\utility\variant.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\view.hpp" />
-    <ClInclude Include="..\..\..\..\include\range\v3\view\adjacent_filter.hpp" />
+    <ClInclude Include="..\..\..\..\include\range\v3\view\adjacent_remove_if.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\view\all.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\view\any_range.hpp" />
     <ClInclude Include="..\..\..\..\include\range\v3\view\bounded.hpp" />

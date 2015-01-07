@@ -10,8 +10,8 @@
 //
 // Project home: https://github.com/ericniebler/range-v3
 //
-#ifndef RANGES_V3_ALGORITHM_PARTITION_COPY_HPP
-#define RANGES_V3_ALGORITHM_PARTITION_COPY_HPP
+#ifndef RANGES_V3_ALGORITHM_PARTITION_MOVE_HPP
+#define RANGES_V3_ALGORITHM_PARTITION_MOVE_HPP
 
 #include <tuple>
 #include <range/v3/range_fwd.hpp>
@@ -33,21 +33,21 @@ namespace ranges
         template<typename I, typename O0, typename O1, typename C, typename P = ident,
             typename V = iterator_common_reference_t<I>,
             typename X = concepts::Invokable::result_t<P, V>>
-        using PartitionCopyable = meta::fast_and<
+        using PartitionMovable = meta::fast_and<
             InputIterator<I>,
             WeaklyIncrementable<O0>,
             WeaklyIncrementable<O1>,
-            IndirectlyCopyable<I, O0>,
-            IndirectlyCopyable<I, O1>,
+            IndirectlyMovable<I, O0>,
+            IndirectlyMovable<I, O1>,
             Invokable<P, V>,
             InvokablePredicate<C, X>>;
 
         /// \addtogroup group-algorithms
         /// @{
-        struct partition_copy_fn
+        struct partition_move_fn
         {
             template<typename I, typename S, typename O0, typename O1, typename C, typename P = ident,
-                CONCEPT_REQUIRES_(PartitionCopyable<I, O0, O1, C, P>() && IteratorRange<I, S>())>
+                CONCEPT_REQUIRES_(PartitionMovable<I, O0, O1, C, P>() && IteratorRange<I, S>())>
             std::tuple<I, O0, O1> operator()(I begin, S end, O0 o0, O1 o1, C pred_, P proj_ = P{}) const
             {
                 auto && pred = invokable(pred_);
@@ -56,12 +56,12 @@ namespace ranges
                 {
                     if(pred(proj(*begin)))
                     {
-                        *o0 = *begin;
+                        *o0 = iter_move(begin);
                         ++o0;
                     }
                     else
                     {
-                        *o1 = *begin;
+                        *o1 = iter_move(begin);
                         ++o1;
                     }
                 }
@@ -70,7 +70,7 @@ namespace ranges
 
             template<typename Rng, typename O0, typename O1, typename C, typename P = ident,
                 typename I = range_iterator_t<Rng>,
-                CONCEPT_REQUIRES_(PartitionCopyable<I, O0, O1, C, P>() && Iterable<Rng &>())>
+                CONCEPT_REQUIRES_(PartitionMovable<I, O0, O1, C, P>() && Iterable<Rng &>())>
             std::tuple<I, O0, O1> operator()(Rng &rng, O0 o0, O1 o1, C pred, P proj = P{}) const
             {
                 return (*this)(begin(rng), end(rng), std::move(o0), std::move(o1), std::move(pred),
@@ -78,9 +78,9 @@ namespace ranges
             }
         };
 
-        /// \sa `partition_copy_fn`
+        /// \sa `partition_move_fn`
         /// \ingroup group-algorithms
-        constexpr partition_copy_fn partition_copy{};
+        constexpr partition_move_fn partition_move{};
 
         /// @}
     } // namespace v3

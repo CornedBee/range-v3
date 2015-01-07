@@ -48,6 +48,12 @@ namespace ranges
         using range_reference_t = concepts::InputRange::reference_t<Rng>;
 
         template<typename Rng>
+        using range_rvalue_reference_t = concepts::InputRange::rvalue_reference_t<Rng>;
+
+        template<typename Rng>
+        using range_common_reference_t = concepts::InputRange::common_reference_t<Rng>;
+
+        template<typename Rng>
         using range_category_t = concepts::InputRange::category_t<Rng>;
 
         template<typename Rng>
@@ -97,6 +103,18 @@ namespace ranges
         struct range_reference
         {
             using type = range_reference_t<Rng>;
+        };
+
+        template<typename Rng>
+        struct range_rvalue_reference
+        {
+            using type = range_rvalue_reference_t<Rng>;
+        };
+
+        template<typename Rng>
+        struct range_common_reference
+        {
+            using type = range_common_reference_t<Rng>;
         };
 
         template<typename Rng>

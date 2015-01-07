@@ -28,14 +28,6 @@ namespace ranges
 {
     inline namespace v3
     {
-        /// \cond
-        namespace detail
-        {
-            template<typename T> T && rref(T &, int);
-            template<typename T> T rref(T, long);
-        }
-        /// \endcond
-
         /// \addtogroup group-views
         /// @{
         template<typename Rng>
@@ -50,10 +42,9 @@ namespace ranges
                 using adaptor_base::prev;
             public:
                 using single_pass = std::true_type;
-                auto current(range_iterator_t<Rng> it) const ->
-                    decltype(detail::rref(*it, 1))
+                range_rvalue_reference_t<Rng> current(range_iterator_t<Rng> it) const
                 {
-                    return std::move(*it);
+                    return iter_move(it);
                 }
             };
             adaptor begin_adaptor() const

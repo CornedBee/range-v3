@@ -16,7 +16,7 @@
 
 #include <range/v3/detail/disable_warnings.hpp>
 
-#include <range/v3/view/adjacent_filter.hpp>
+#include <range/v3/view/adjacent_remove_if.hpp>
 #include <range/v3/view/all.hpp>
 #include <range/v3/view/any_range.hpp>
 #include <range/v3/view/bounded.hpp>
@@ -47,6 +47,7 @@
 #include <range/v3/view/reverse.hpp>
 #include <range/v3/view/single.hpp>
 #include <range/v3/view/slice.hpp>
+#include <range/v3/view/split.hpp>
 #include <range/v3/view/stride.hpp>
 #include <range/v3/view/tail.hpp>
 #include <range/v3/view/take.hpp>

@@ -17,8 +17,10 @@
 #include <new>
 #include <utility>
 #include <iterator>
+#include <type_traits>
 #include <range/v3/range_fwd.hpp>
 #include <range/v3/utility/swap.hpp> // for indirect_swap
+#include <range/v3/utility/move.hpp> // for indirect_move
 #include <range/v3/utility/iterator_traits.hpp>
 #include <range/v3/utility/iterator_concepts.hpp>
 
@@ -315,6 +317,21 @@ namespace ranges
         /// \sa `iter_swap_fn`
         constexpr iter_swap_fn iter_swap {};
 
+        struct iter_move_fn
+        {
+            template<typename I,
+                CONCEPT_REQUIRES_(Readable<I>())>
+            iterator_rvalue_reference_t<I> operator()(I const &i) const
+                noexcept(noexcept(indirect_move(i)))
+            {
+                return indirect_move(i);
+            }
+        };
+
+        /// \ingroup group-utility
+        /// \sa `iter_move_fn`
+        constexpr iter_move_fn iter_move {};
+
         template<typename Cont>
         struct back_insert_iterator
         {
@@ -358,7 +375,7 @@ namespace ranges
         /// \sa `back_inserter_fn`
         constexpr back_inserter_fn back_inserter {};
 
-        template<typename T, typename Char = char, typename Traits = std::char_traits<Char>>
+        template<typename T = void, typename Char = char, typename Traits = std::char_traits<Char>>
         struct ostream_iterator
         {
         private:
@@ -372,10 +389,16 @@ namespace ranges
             ostream_iterator(std::basic_ostream<Char, Traits> &sout, Char const *delim = nullptr)
               : sout_(&sout), delim_(delim)
             {}
-            ostream_iterator const &operator=(T const &t) const
+            template<typename U,
+                enable_if_t<
+                    meta::or_<
+                        std::is_void<T>,
+                        std::is_convertible<U, meta::eval<std::add_lvalue_reference<T const>>>>::value> = 0>
+            ostream_iterator const &operator=(U &&t) const
             {
                 RANGES_ASSERT(sout_);
-                *sout_ << t;
+                using V = meta::if_<std::is_void<T>, U, T>;
+                *sout_ << static_cast<V const &>(t);
                 if(delim_)
                     *sout_ << delim_;
                 return *this;
